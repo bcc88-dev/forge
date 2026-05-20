@@ -1,0 +1,163 @@
+/* ========== VAULT TUI THEME: BIG, BOLD, BEAUTIFUL ========== */
+Screen {
+    background: #000000;
+    color: #E0E0E0;
+}
+
+/* ========== HEADER SECTION ========== */
+#title {
+    text-style: bold;
+    color: #00FFEF;
+    text-align: center;
+    margin: 1 0 0 0;
+    padding: 0 1;
+}
+
+#subtitle {
+    text-style: italic;
+    color: #888888;
+    text-align: center;
+    margin: 0 0 1 0;
+}
+
+/* ========== SECTION TITLES ========== */
+#section-title {
+    text-style: bold;
+    color: #00FFEF;
+    margin: 1 0 0 0;
+    padding: 0 1;
+}
+
+/* ========== VAULT LIST ========== */
+.vault-list {
+    height: 1fr;
+    border: solid #0066FF;
+    padding: 1 2;
+    overflow-y: auto;
+    background: #000000;
+}
+
+.list-header {
+    text-style: bold;
+    color: #00FFEF;
+    margin: 0 0 1 0;
+    padding: 0 1;
+    text-align: center;
+    background: #001122;
+}
+
+.vault-list Label {
+    margin: 0 0 1 0;
+    padding: 0 1 0 2;
+    text-style: bold;
+    color: #E0E0E0;
+    min-width: 40;
+}
+
+.vault-list Label:hover {
+    background: #003366;
+    color: #FFFFFF;
+    text-style: bold;
+}
+
+.vault-list Label.-highlighted {
+    background: #0066FF;
+    color: #FFFFFF;
+    text-style: bold;
+}
+
+/* ========== BUTTON BAR ========== */
+#button-bar {
+    height: 3;
+    margin: 1 0 0 0;
+    align: center middle;
+}
+
+Button {
+    margin: 0 1;
+    min-width: 14;
+    text-style: bold;
+    height: 3;
+}
+
+#btn-new {
+    background: #00AA00;
+    color: #000000;
+}
+#btn-edit {
+    background: #0066FF;
+    color: #FFFFFF;
+}
+#btn-decrypt {
+    background: #FFAA00;
+    color: #000000;
+}
+#btn-refresh {
+    background: #666666;
+    color: #FFFFFF;
+}
+#btn-help {
+    background: #6600CC;
+    color: #FFFFFF;
+}
+#btn-quit {
+    background: #FF0000;
+    color: #FFFFFF;
+}
+
+/* ========== HELP SCREEN ========== */
+#help-content {
+    color: #E0E0E0;
+    margin: 1 0;
+    padding: 1 2;
+    background: #000000;
+    border: solid #0066FF;
+}
+
+/* ========== TOOLTIPS & NOTIFICATIONS ========== */
+Tooltip {
+    background: #000000;
+    color: #FFFFFF;
+    border: solid #0066FF;
+}
+
+Notification {
+    background: #000000;
+    color: #E0E0E0;
+    text-style: bold;
+}
+
+/* ========== SCROLLBAR STYLING ========== */
+.vault-list > .scrollbar {
+    background: #000000;
+    color: #0066FF;
+}
+
+/* ========== ERROR STATES ========== */
+.error {
+    color: #FF5555;
+    text-style: bold;
+}
+
+.hint {
+    color: #888888;
+    text-style: italic;
+}
+
+/* ========== TITLE STYLE ========== */
+.title {
+    text-style: bold;
+    color: #00FFEF;
+    text-align: center;
+    margin: 1 0;
+}
+
+/* ========== SCREEN CONTAINERS ========== */
+Static {
+    padding: 0 1;
+}
+
+/* ========== INPUT FIELDS ========== */
+Input {
+    margin: 1 0;
+}

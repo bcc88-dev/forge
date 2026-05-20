@@ -1,0 +1,4 @@
+{
+  "provider": "ollama",
+  "ollama_model": "nemotron-3-super:cloud"
+}

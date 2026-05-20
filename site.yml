@@ -1,0 +1,80 @@
+---
+- name: Deploy Nginx Web Server
+  hosts: localhost
+  connection: local
+  become: true
+  vars:
+    nginx_docroot: /var/www/html
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Ensure nginx is started and enabled
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Configure nginx default site
+      lineinfile:
+        path: /etc/nginx/sites-available/default
+        regexp: 'listen 80 default_server'
+        line: 'listen 80 default_server'
+      notify: Test and reload nginx
+
+    - name: Enable default nginx site
+      file:
+        src: /etc/nginx/sites-available/default
+        dest: /etc/nginx/sites-enabled/default
+        state: link
+      notify: Reload nginx
+
+    - name: Deploy custom index.html
+      copy:
+        dest: "{{ nginx_docroot }}/index.html"
+        content: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>NxTerm Deployed App</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 40px; background: #1a1a2e; color: #eee; }
+              h1 { color: #00d4ff; }
+              .status { color: #00ff88; font-weight: bold; }
+              .time { color: #888; font-size: 0.9em; }
+            </style>
+          </head>
+          <body>
+            <h1>🎸 NxTerm Deployment Success!</h1>
+            <p class="status">✓ Web server deployed via Ansible</p>
+            <p>Deployed at: {{ ansible_date_time.iso8601 }}</p>
+            <p>Host: {{ inventory_hostname }}</p>
+          </body>
+          </html>
+      notify: Reload nginx
+
+    - name: Verify deployment
+      uri:
+        url: http://localhost
+        status_code: 200
+      register: verify_result
+      until: verify_result.status == 200
+      retries: 3
+      delay: 2
+
+  handlers:
+    - name: Test and reload nginx
+      shell: nginx -t && systemctl reload nginx
+
+    - name: Reload nginx
+      service:
+        name: nginx
+        state: reloaded

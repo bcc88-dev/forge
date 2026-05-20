@@ -1,0 +1,1 @@
+print("Forge is running with Ollama streaming!")

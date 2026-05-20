@@ -1,0 +1,10 @@
+{
+  "history": [
+    "create a colorful ASCII art generator in art.py",
+    "make hello.py print Hello from Ollama instead",
+    "make hello.py print Testing streaming and config",
+    "make hello.py print Forge is running with Ollama streaming!",
+    "create a hello.py that prints Forge is working"
+  ],
+  "summary": "create a hello.py that prints Forge is working"
+}

@@ -1,0 +1,4 @@
+-e webserver:
+  hosts:
+    localhost:
+      ansible_connection: local

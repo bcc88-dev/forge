@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/**/*.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/license/create", "dest": "/api/license/create.js" },
+    { "src": "/api/license/validate", "dest": "/api/license/validate.js" },
+    { "src": "/api/webhook/stripe", "dest": "/api/webhook/stripe.js" },
+    { "src": "/(.*)", "dest": "/web/$1" }
+  ],
+  "env": {
+    "STRIPE_SECRET_KEY": "@stripe_secret_key",
+    "STRIPE_WEBHOOK_SECRET": "@stripe_webhook_secret",
+    "SUPABASE_URL": "@supabase_url",
+    "SUPABASE_SERVICE_KEY": "@supabase_service_key"
+  }
+}

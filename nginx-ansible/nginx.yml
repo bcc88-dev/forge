@@ -1,0 +1,32 @@
+---
+- name: Deploy Nginx container on port 8096
+  hosts: webservers
+  become: true
+  tasks:
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Pull Nginx image
+      command: docker pull nginx
+      register: pull_result
+      changed_when: "'Downloaded' in pull_result.stdout or 'Already up to date' in pull_result.stdout"
+      ignore_errors: true
+
+    - name: Check if nginx container is already running
+      command: docker ps --filter name=nginx-webamp --format "{{.Names}}"
+      register: container_check
+      ignore_errors: true
+      changed_when: false
+
+    - name: Stop and remove existing nginx container if present
+      command: docker rm -f nginx-webapp
+      when: container_check.stdout is defined and container_check.stdout == "nginx-webapp"
+      ignore_errors: true
+
+    - name: Run Nginx container
+      command: docker run -d --name nginx-webapp -p 8096:80 nginx
+      register: run_result
+      changed_when: "'docker run' in run_result.cmd"
