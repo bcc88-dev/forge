@@ -7,6 +7,8 @@
   "routes": [
     { "src": "/api/license/create", "dest": "/api/license/create.js" },
     { "src": "/api/license/validate", "dest": "/api/license/validate.js" },
-    { "src": "/api/webhook/stripe", "dest": "/api/webhook/stripe.js" }
+    { "src": "/api/webhook/stripe", "dest": "/api/webhook/stripe.js" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/public/" }
   ]
 }
