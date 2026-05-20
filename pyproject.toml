@@ -3,14 +3,14 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "forge-cli"
+name = "clide-cli"
 version = "0.1.0"
 description = "The AI coding agent that never forgets"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [
-    {name = "Forge AI", email = "hello@forge-cli.vercel.app"},
+    {name = "Forge AI", email = "hello@clide-cli.vercel.app"},
 ]
 dependencies = [
     "rich>=13.0",
@@ -21,18 +21,17 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Code Generators",
 ]
 
 [project.urls]
-Home = "https://forge-cli.vercel.app"
-Source = "https://github.com/forge-cli/forge"
-Documentation = "https://forge-cli.vercel.app/docs"
+Home = "https://clide-cli.vercel.app"
+Source = "https://github.com/bcc88-dev/forge"
+Documentation = "https://clide-cli.vercel.app/docs"
 
 [project.scripts]
-forge = "forge.cli:main"
+clide = "forge.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

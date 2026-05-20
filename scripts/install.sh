@@ -2,7 +2,7 @@
 set -e
 
 # Forge - AI coding agent that never forgets
-# Installer: curl -fsSL https://forge-cli.vercel.app/install.sh | bash
+# Installer: curl -fsSL https://clide-cli.vercel.app/install.sh | bash
 
 BOLD='\033[1m'
 GREEN='\033[0;32m'
