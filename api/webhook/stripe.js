@@ -23,28 +23,49 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const sig = req.headers['stripe-signature'];
-    const body = JSON.stringify(req.body);
     const event = req.body;
     console.log(`Stripe webhook: ${event.type}`);
 
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object;
-        const license_key = 'fg_' + crypto.randomBytes(24).toString('hex');
+        const license_key = session.metadata?.license_key || session.client_reference_id;
+        const email = session.customer_email || '';
         const expires_at = new Date(Date.now() + 30 * 86400000).toISOString();
-        await supabaseFetch('forge_licenses', {
-          method: 'POST',
-          body: JSON.stringify({
-            license_key,
-            tier: session.metadata?.tier || 'individual',
-            status: 'active',
-            expires_at,
-            stripe_subscription_id: session.subscription,
-            stripe_customer_id: session.customer,
-          }),
-        });
-        console.log(`License created: ${license_key} for ${session.customer_email}`);
+
+        if (license_key) {
+          // Update existing pending license to active
+          const resp = await supabaseFetch(
+            `forge_licenses?license_key=eq.${license_key}`,
+            {
+              method: 'PATCH',
+              body: JSON.stringify({
+                status: 'active',
+                expires_at,
+                email,
+                stripe_subscription_id: session.subscription,
+                stripe_customer_id: session.customer,
+              }),
+            }
+          );
+          console.log(`License activated: ${license_key} for ${email}`);
+        } else {
+          // Fallback: create new license
+          const new_key = 'fg_' + crypto.randomBytes(24).toString('hex');
+          await supabaseFetch('forge_licenses', {
+            method: 'POST',
+            body: JSON.stringify({
+              license_key: new_key,
+              tier: session.metadata?.tier || 'individual',
+              status: 'active',
+              expires_at,
+              email,
+              stripe_subscription_id: session.subscription,
+              stripe_customer_id: session.customer,
+            }),
+          });
+          console.log(`License created (fallback): ${new_key}`);
+        }
         break;
       }
       case 'customer.subscription.deleted': {
@@ -56,10 +77,6 @@ module.exports = async (req, res) => {
         console.log(`Subscription cancelled: ${sub.id}`);
         break;
       }
-      case 'invoice.payment_succeeded':
-      case 'invoice.payment_failed':
-        console.log(`Invoice event: ${event.type} for ${event.data.object.id}`);
-        break;
       default:
         console.log(`Unhandled: ${event.type}`);
     }

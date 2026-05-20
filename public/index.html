@@ -42,19 +42,19 @@
         @keyframes blink { 50% { opacity: 0; } }
         .btn {
             display: inline-block; padding: 0.75rem 2rem; border-radius: 8px;
-            font-weight: 600; text-decoration: none; margin: 0.5rem;
+            font-weight: 600; text-decoration: none; margin: 0.5rem; border: none; cursor: pointer;
             transition: all 0.2s;
         }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-primary { background: linear-gradient(135deg, #22d3ee, #a78bfa); color: #09090b; }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(34, 211, 238, 0.3); }
-        .btn-outline { border: 1px solid #27272a; color: #e4e4e7; }
-        .btn-outline:hover { border-color: #22d3ee; }
-        .btn-github { background: #24292e; color: #fff; border: 1px solid #404448; }
-        .btn-github:hover { background: #2c3136; }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(34, 211, 238, 0.3); }
+        .btn-outline { border: 1px solid #27272a; color: #e4e4e7; background: transparent; }
+        .btn-outline:hover:not(:disabled) { border-color: #22d3ee; }
         .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 3rem 0; }
         .feature { background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 1.5rem; }
         .feature h3 { color: #22d3ee; margin-bottom: 0.5rem; }
         .feature p { color: #71717a; font-size: 0.9rem; }
+        .feature code { color: #22d3ee; background: #09090b; padding: 0.1rem 0.3rem; border-radius: 3px; }
         .pricing { text-align: center; padding: 3rem 0; }
         .pricing h2 { margin-bottom: 1rem; }
         .price-card { display: inline-block; background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 2rem; margin: 1rem; min-width: 260px; vertical-align: top; }
@@ -68,10 +68,25 @@
         .price-card .badge { display: inline-block; background: #22d3ee22; color: #22d3ee; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; margin-bottom: 0.5rem; }
         footer { text-align: center; padding: 2rem; color: #52525b; font-size: 0.8rem; }
         .cta-buttons { text-align: center; margin: 2rem 0; }
-        .ssh-demo { margin: 1rem 0; }
+        .key-display {
+            background: #09090b; border: 1px solid #22d3ee44; border-radius: 8px; padding: 1rem;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; text-align: center; margin: 1rem 0;
+        }
+        .key-display .key { color: #22d3ee; font-size: 1.1rem; letter-spacing: 1px; user-select: all; }
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: #18181b; border: 1px solid #22d3ee44; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%;
+        }
+        .modal-content h3 { color: #22d3ee; margin-bottom: 1rem; }
+        .modal-content p { color: #a1a1aa; margin-bottom: 0.5rem; }
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #22d3ee33; border-top-color: #22d3ee; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 0.5rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error-msg { color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem; }
         .ssh-demo code { background: #09090b; padding: 0.2rem 0.5rem; border-radius: 4px; color: #22d3ee; }
-        .section-title { font-size: 1.8rem; text-align: center; margin: 3rem 0 1rem; }
-        .github-auth { text-align: center; margin: 1rem 0; }
     </style>
 </head>
 <body>
@@ -84,8 +99,7 @@
 
         <div class="cta-buttons">
             <a href="#terminal" class="btn btn-primary">Try Web Terminal</a>
-            <a href="#ssh" class="btn btn-outline">SSH Access</a>
-            <a href="#pricing" class="btn btn-outline">Pricing</a>
+            <a href="#pricing" class="btn btn-outline">Get License Key</a>
         </div>
 
         <div class="terminal-box" id="terminal">
@@ -95,73 +109,30 @@
                 <span class="terminal-dot green"></span>
                 <span style="color: #52525b; font-size: 0.75rem; margin-left: 0.5rem;">clide@agent — Web Terminal</span>
             </div>
-            <div class="terminal-body" id="xterm-container">
-                <div><span class="prompt">clide@agent:~$</span> <span class="output">ssh ai@clide.ai</span></div>
-                <div><span class="output">Authenticating via GitHub...</span></div>
-                <div><span class="output" style="color: #22c55e;">> Welcome back, user! I remember your last session.</span></div>
-                <div><span class="prompt">clide@agent:~$</span> <span class="output">build my react app</span></div>
-                <div><span class="output" style="color: #22d3ee;">> I remember you were working on a dashboard.</span></div>
-                <div><span class="output" style="color: #22d3ee;">> Let's pick up where we left off...</span></div>
-                <div><span class="prompt">clide@agent:~$</span><span class="cursor"> ▊</span></div>
+            <div class="terminal-body">
+                <div><span class="prompt">$</span> <span class="output">ssh ai@clide.ai</span></div>
+                <div><span class="output">password: <span style="color:#22c55e">********</span></span></div>
+                <div><span class="output" style="color: #22c55e;">> Authenticated. Welcome back! I remember your last session.</span></div>
+                <div><span class="output" style="color: #22d3ee;">> You were working on the payment API.</span></div>
+                <div><span class="prompt">clide&gt;</span> <span class="output">finish the Stripe integration</span></div>
+                <div><span class="output" style="color: #22d3ee;">> Pulling memories from last session...</span></div>
+                <div><span class="prompt">clide&gt;</span><span class="cursor"> &#9612;</span></div>
             </div>
         </div>
 
-        <div class="features">
-            <div class="feature">
-                <h3>Zero Install</h3>
-                <p>Open a browser or type <code style="color:#22d3ee">ssh ai@clide.ai</code>. No pip, no setup, no config.</p>
-            </div>
-            <div class="feature">
-                <h3>Persistent Memory</h3>
-                <p>Every session remembers the last. Your preferences, your project, your decisions — forever.</p>
-            </div>
-            <div class="feature">
-                <h3>GitHub Auth</h3>
-                <p>Sign in with GitHub via Supabase. No passwords to remember. Your license key is your SSH key.</p>
-            </div>
-            <div class="feature">
-                <h3>Multi-Model</h3>
-                <p>Runs on Groq, OpenAI, Ollama, OpenRouter. You choose. The agent doesn't care.</p>
-            </div>
-            <div class="feature">
-                <h3>Multi-Terminal</h3>
-                <p>Same agent session across browser and terminal. Start in one, continue in the other.</p>
-            </div>
-            <div class="feature">
-                <h3>Your Data</h3>
-                <p>Memory stored in your Supabase. API keys encrypted. No vendor lock-in. MIT licensed.</p>
-            </div>
-        </div>
-
-        <div class="box" id="ssh">
-            <h3>SSH Access</h3>
-            <p style="color: #a1a1aa; margin-bottom: 1rem;">No install required. Just SSH in from any terminal.</p>
-            <div class="ssh-demo">
-                <pre><code># Authenticate with your license key
-$ ssh ai@clide.ai
-password: [your license key]
-
-> Welcome! I remember you from last session.
-> You were working on the payment API. Let's continue.
-clide> help me finish the Stripe integration
-
-# Or use the web terminal at clide.ai</code></pre>
-            </div>
-            <div class="github-auth">
-                <a href="#" class="btn btn-github" onclick="alert('GitHub OAuth coming soon! Sign up via Supabase.')">Sign in with GitHub</a>
-                <a href="#pricing" class="btn btn-outline">Get License Key</a>
-            </div>
-        </div>
-
-        <div class="box" id="install">
-            <h3>Install CLI (optional)</h3>
-            <p style="color: #a1a1aa; margin-bottom: 1rem;">For local-only use. No cloud account needed.</p>
-            <pre><code>pip install clide-cli</code></pre>
-            <p style="color: #71717a; margin-top: 0.5rem;">Requires Python 3.10+</p>
+        <div class="box" id="how-it-works">
+            <h3>How it works</h3>
+            <p style="color: #a1a1aa; margin: 1rem 0;">No install, no accounts, no passwords to remember.</p>
+            <ol style="color: #a1a1aa; margin-left: 1.5rem;">
+                <li style="margin: 0.5rem 0;"><strong style="color: #e4e4e7;">Pay once</strong> — Subscribe below, get your license key instantly</li>
+                <li style="margin: 0.5rem 0;"><strong style="color: #e4e4e7;">SSH in</strong> — <code style="color:#22d3ee">ssh ai@clide.ai</code>, enter your license key as the password</li>
+                <li style="margin: 0.5rem 0;"><strong style="color: #e4e4e7;">Build</strong> — Your agent remembers everything from every session</li>
+            </ol>
         </div>
 
         <div id="pricing" class="pricing">
-            <h2>Simple Pricing</h2>
+            <h2>Pick a plan</h2>
+            <div id="subscribe-error" class="error-msg" style="display:none;"></div>
             <div class="price-card">
                 <h3>Local CLI</h3>
                 <div class="price">$0<span>/forever</span></div>
@@ -171,7 +142,7 @@ clide> help me finish the Stripe integration
                     <li>Local SQLite memory</li>
                     <li>MIT License</li>
                 </ul>
-                <a href="#install" class="btn btn-outline" style="display:block; margin-top: 1rem;">Install</a>
+                <a href="https://pypi.org/project/clide-cli/" class="btn btn-outline" style="display:block; margin-top: 1rem;">Install</a>
             </div>
             <div class="price-card featured">
                 <div class="badge">POPULAR</div>
@@ -184,7 +155,7 @@ clide> help me finish the Stripe integration
                     <li>Multi-terminal sessions</li>
                     <li>All API providers</li>
                 </ul>
-                <a href="#" class="btn btn-primary" style="display:block; margin-top: 1rem;">Subscribe</a>
+                <button class="btn btn-primary" style="display:block; margin-top: 1rem; width: 100%;" onclick="checkout('individual')">Subscribe</button>
             </div>
             <div class="price-card">
                 <h3>Enterprise</h3>
@@ -196,13 +167,93 @@ clide> help me finish the Stripe integration
                     <li>Custom integrations</li>
                     <li>Priority support</li>
                 </ul>
-                <a href="#" class="btn btn-outline" style="display:block; margin-top: 1rem;">Contact</a>
+                <a class="btn btn-outline" style="display:block; margin-top: 1rem;" onclick="checkout('enterprise')">Subscribe</a>
+            </div>
+        </div>
+
+        <div class="box" id="install">
+            <h3>Install CLI (free, local-only)</h3>
+            <p style="color: #a1a1aa; margin-bottom: 1rem;">No cloud account needed. Runs entirely on your machine.</p>
+            <pre><code>pip install clide-cli</code></pre>
+            <p style="color: #71717a; margin-top: 0.5rem;">Requires Python 3.10+</p>
+        </div>
+
+        <!-- Success Modal -->
+        <div class="modal" id="success-modal">
+            <div class="modal-content">
+                <h3>&#9989; Payment successful!</h3>
+                <p>Here is your license key. Use it to SSH into your agent.</p>
+                <div class="key-display">
+                    <div style="color: #71717a; font-size: 0.8rem; margin-bottom: 0.5rem;">Your license key</div>
+                    <div class="key" id="license-key-display">fg_...</div>
+                </div>
+                <div style="background: #09090b; border-radius: 8px; padding: 0.8rem; margin: 1rem 0;">
+                    <code style="color: #22d3ee;">ssh ai@clide.ai</code>
+                    <div style="color: #71717a; font-size: 0.8rem; margin-top: 0.3rem;">Password is your license key</div>
+                </div>
+                <button class="btn btn-primary" style="width:100%;" onclick="closeSuccess()">Got it</button>
+            </div>
+        </div>
+
+        <!-- Loading Modal -->
+        <div class="modal" id="loading-modal">
+            <div class="modal-content" style="text-align:center;">
+                <div class="spinner" style="width:32px;height:32px;border-width:3px;margin:1rem auto;"></div>
+                <p>Redirecting to Stripe...</p>
             </div>
         </div>
 
         <footer>
-            CLIDE &mdash; Built with Python and ❤️ &mdash; MIT License &mdash; <a href="https://github.com/bcc88-dev/forge" style="color: #52525b;">GitHub</a>
+            CLIDE &mdash; Built with Python and &#9829; &mdash; MIT License &mdash; <a href="https://github.com/bcc88-dev/forge" style="color: #52525b;">GitHub</a>
         </footer>
     </div>
+
+    <script>
+    async function checkout(tier) {
+        const btn = event.target;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Processing...';
+        document.getElementById('subscribe-error').style.display = 'none';
+
+        try {
+            const resp = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tier }),
+            });
+            const data = await resp.json();
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                throw new Error(data.error || 'Checkout failed');
+            }
+        } catch (err) {
+            document.getElementById('subscribe-error').textContent = 'Error: ' + err.message;
+            document.getElementById('subscribe-error').style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = 'Subscribe';
+        }
+    }
+
+    // On page load, check for success query param
+    function checkSuccess() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('success') === 'true') {
+            const key = params.get('key');
+            if (key) {
+                document.getElementById('license-key-display').textContent = key;
+                document.getElementById('success-modal').classList.add('active');
+                // Clean URL
+                window.history.replaceState({}, '', '/');
+            }
+        }
+    }
+
+    function closeSuccess() {
+        document.getElementById('success-modal').classList.remove('active');
+    }
+
+    checkSuccess();
+    </script>
 </body>
 </html>
