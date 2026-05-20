@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "clide-cli"
 version = "0.1.0"
-description = "The AI coding agent that never forgets"
+description = "CLIDE - The AI coding agent that never forgets"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [
-    {name = "Forge AI", email = "hello@clide-cli.vercel.app"},
+    {name = "CLIDE AI", email = "hello@clide-cli.vercel.app"},
 ]
 dependencies = [
     "rich>=13.0",

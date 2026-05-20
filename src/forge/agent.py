@@ -1,4 +1,4 @@
-"""Forge agent loop - the core execution engine."""
+"""CLIDE agent loop - the core execution engine."""
 
 import re
 import difflib
@@ -17,11 +17,11 @@ console = Console()
 memory = Memory()
 license = LicenseClient()
 
-SYSTEM_PROMPT = """You are Forge. You help users build software.
+SYSTEM_PROMPT = """You are CLIDE. You help users build software.
 
 Tools: {tools}
 
-Write files using ```filepath: path.ext blocks. Never edit forge files. Be concise."""
+Write files using ```filepath: path.ext blocks. Never edit CLIDE files. Be concise."""
 
 
 def build_prompt(instruction: str, context: dict = None) -> str:

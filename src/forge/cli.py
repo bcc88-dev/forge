@@ -1,4 +1,4 @@
-"""Forge CLI - command line interface."""
+"""CLIDE CLI - command line interface."""
 
 import sys
 import argparse
@@ -20,7 +20,7 @@ console = Console()
 def cmd_interactive(args):
     """Run interactive mode."""
     console.print(Panel.fit(
-        "[bold green]Forge[/bold green] - The AI coding agent that never forgets",
+        "[bold green]CLIDE[/bold green] - The AI coding agent that never forgets",
         border_style="green"
     ))
 
@@ -44,7 +44,7 @@ def cmd_config(args):
         value = cfg.get(args.get, "[not set]")
         console.print(f"{args.get} = {value}")
     else:
-        console.print("[bold]Forge Configuration:[/bold]")
+        console.print("[bold]CLIDE Configuration:[/bold]")
         for k, v in cfg.items():
             if any(secret in k for secret in ["key", "secret", "token", "password"]):
                 v = v[:8] + "..." if v else "[not set]"
@@ -87,11 +87,11 @@ def cmd_license(args):
             console.print(f"[green]Licensed:[/green] via {source}")
     else:
         console.print("[red]No valid license found[/red]")
-        console.print("Run: forge license --set YOUR_KEY")
+        console.print("Run: clide license --set YOUR_KEY")
 
 
 def cmd_login(args):
-    """Login to Forge Cloud."""
+    """Login to CLIDE Cloud."""
     if not args.email:
         args.email = console.input("Email: ")
     if not args.password:
@@ -105,7 +105,7 @@ def cmd_login(args):
 
 
 def cmd_signup(args):
-    """Create a Forge Cloud account."""
+    """Create a CLIDE Cloud account."""
     if not args.email:
         args.email = console.input("Email: ")
     if not args.password:
@@ -131,10 +131,10 @@ def cmd_providers(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Forge - The AI coding agent that never forgets",
+        description="CLIDE - The AI coding agent that never forgets",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--version", action="version", version=f"forge {__version__}")
+    parser.add_argument("--version", action="version", version=f"clide {__version__}")
     parser.add_argument("--auto", action="store_true", help="Auto-apply changes")
     parser.add_argument("instruction", nargs="*", help="What to do")
 
@@ -151,11 +151,11 @@ def main():
     lic_parser = sub.add_parser("license", help="License management")
     lic_parser.add_argument("--set", metavar="KEY", help="Set license key")
 
-    login_parser = sub.add_parser("login", help="Login to Forge Cloud")
+    login_parser = sub.add_parser("login", help="Login to CLIDE Cloud")
     login_parser.add_argument("--email", help="Email address")
     login_parser.add_argument("--password", help="Password")
 
-    signup_parser = sub.add_parser("signup", help="Create Forge Cloud account")
+    signup_parser = sub.add_parser("signup", help="Create CLIDE Cloud account")
     signup_parser.add_argument("--email", help="Email address")
     signup_parser.add_argument("--password", help="Password")
 

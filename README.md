@@ -1,4 +1,4 @@
-# Forge
+# CLIDE
 
 The AI coding agent that **never forgets**.
 

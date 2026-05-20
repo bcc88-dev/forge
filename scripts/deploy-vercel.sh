@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "=== Forge Vercel Deploy ==="
+echo "=== CLIDE Vercel Deploy ==="
 
 # Login if not already
 if ! npx vercel whoami &>/dev/null; then

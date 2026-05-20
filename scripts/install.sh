@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Forge - AI coding agent that never forgets
+# CLIDE - AI coding agent that never forgets
 # Installer: curl -fsSL https://clide-cli.vercel.app/install.sh | bash
 
 BOLD='\033[1m'
@@ -20,7 +20,7 @@ cat << "EOF"
  |______\___/|_|  |_|___/
 EOF
 echo -e "${NC}"
-echo -e "${BOLD}Forge - The AI coding agent that never forgets${NC}"
+echo -e "${BOLD}CLIDE - The AI coding agent that never forgets${NC}"
 echo ""
 
 # Check Python
@@ -52,7 +52,7 @@ else
     fi
 fi
 
-echo -e "${CYAN}Installing forge...${NC}"
+echo -e "${CYAN}Installing clide-cli...${NC}"
 
 if command -v pip3 &> /dev/null; then
     pip3 install forge-cli
@@ -63,7 +63,7 @@ else
 fi
 
 echo ""
-echo -e "${GREEN}${BOLD}Forge installed!${NC}"
+echo -e "${GREEN}${BOLD}CLIDE installed!${NC}"
 echo ""
 echo "Run:"
 echo -e "  ${CYAN}forge${NC}                    # Interactive mode"

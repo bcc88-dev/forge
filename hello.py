@@ -1,1 +1,1 @@
-print("Forge is running with Ollama streaming!")
+print("CLIDE is running with Ollama streaming!")

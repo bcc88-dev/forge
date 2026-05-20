@@ -48,7 +48,7 @@ def call_groq(prompt: str, model: str = None, stream_callback=None):
     cfg = load_config()
     api_key = get_api_key("groq")
     if not api_key:
-        return "Error: No Groq API key set. Run: forge config set groq_api_key YOUR_KEY"
+        return "Error: No Groq API key set. Run: clide config set groq_api_key YOUR_KEY"
     model = model or "llama-3.1-8b-instant"
     # Groq free tier TPM limit is 6000, so we must keep max_tokens low
     max_tokens = min(cfg.get("max_tokens", 2000), 2000)
@@ -91,7 +91,7 @@ def call_openrouter(prompt: str, model: str = None, stream_callback=None):
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
                 "HTTP-Referer": "https://forge-cli.vercel.app",
-                "X-OpenRouter-Title": "Forge"
+                "X-OpenRouter-Title": "CLIDE"
             },
             json={
                 "model": model,
