@@ -17,22 +17,19 @@ from .api_client import check_provider
 console = Console()
 
 
-def cmd_interactive(args):
-    """Run interactive mode."""
-    console.print(Panel.fit(
-        "[bold green]CLIDE[/bold green] - The AI coding agent that never forgets",
-        border_style="green"
-    ))
-
-    instruction = " ".join(args.instruction).strip() if args.instruction else ""
+def cmd_interactive(args, instruction_text=""):
+    instruction = instruction_text
     if not instruction:
+        console.print(Panel.fit(
+            "[bold green]CLIDE[/bold green] - The AI coding agent that never forgets",
+            border_style="green"
+        ))
         instruction = console.input("\n[bold]What should I do?[/bold]\n> ")
 
     run(instruction, auto=args.auto)
 
 
 def cmd_config(args):
-    """Manage configuration."""
     cfg = load_config()
     if args.set:
         key, value = args.set.split("=", 1)
@@ -47,12 +44,11 @@ def cmd_config(args):
         console.print("[bold]CLIDE Configuration:[/bold]")
         for k, v in cfg.items():
             if any(secret in k for secret in ["key", "secret", "token", "password"]):
-                v = v[:8] + "..." if v else "[not set]"
+                v = str(v)[:8] + "..." if v is not None else "[not set]"
             console.print(f"  {k} = {v}")
 
 
 def cmd_memory(args):
-    """Manage memory."""
     mem = Memory()
     if args.remember:
         parts = args.remember.split("=", 1)
@@ -75,7 +71,6 @@ def cmd_memory(args):
 
 
 def cmd_license(args):
-    """Check license status."""
     lic = LicenseClient()
     status = lic.validate()
     if status.get("valid"):
@@ -91,7 +86,6 @@ def cmd_license(args):
 
 
 def cmd_login(args):
-    """Login to CLIDE Cloud."""
     if not args.email:
         args.email = console.input("Email: ")
     if not args.password:
@@ -105,7 +99,6 @@ def cmd_login(args):
 
 
 def cmd_signup(args):
-    """Create a CLIDE Cloud account."""
     if not args.email:
         args.email = console.input("Email: ")
     if not args.password:
@@ -119,7 +112,6 @@ def cmd_signup(args):
 
 
 def cmd_providers(args):
-    """Check available providers."""
     for provider in ["ollama", "groq"]:
         available, models = check_provider(provider)
         status = "[green]available[/green]" if available else "[red]unavailable[/red]"
@@ -136,48 +128,50 @@ def main():
     )
     parser.add_argument("--version", action="version", version=f"clide {__version__}")
     parser.add_argument("--auto", action="store_true", help="Auto-apply changes")
-    parser.add_argument("instruction", nargs="*", help="What to do")
 
-    sub = parser.add_subparsers(dest="command", help="Commands")
+    args, unknown = parser.parse_known_args()
 
-    cfg_parser = sub.add_parser("config", help="Manage configuration")
-    cfg_parser.add_argument("--set", metavar="KEY=VALUE", help="Set a config value")
-    cfg_parser.add_argument("--get", metavar="KEY", help="Get a config value")
+    if not unknown:
+        cmd_interactive(args)
+        return
 
-    mem_parser = sub.add_parser("memory", help="Manage memory")
-    mem_parser.add_argument("--remember", metavar="KEY=VALUE", help="Store a memory")
-    mem_parser.add_argument("--recall", metavar="QUERY", nargs="?", const="", help="Recall memories")
+    cmd = unknown[0]
+    cmd_args = unknown[1:]
 
-    lic_parser = sub.add_parser("license", help="License management")
-    lic_parser.add_argument("--set", metavar="KEY", help="Set license key")
-
-    login_parser = sub.add_parser("login", help="Login to CLIDE Cloud")
-    login_parser.add_argument("--email", help="Email address")
-    login_parser.add_argument("--password", help="Password")
-
-    signup_parser = sub.add_parser("signup", help="Create CLIDE Cloud account")
-    signup_parser.add_argument("--email", help="Email address")
-    signup_parser.add_argument("--password", help="Password")
-
-    sub.add_parser("providers", help="Check available providers")
-
-    args = parser.parse_args()
-
-    if args.command == "config":
-        cmd_config(args)
-    elif args.command == "memory":
-        cmd_memory(args)
-    elif args.command == "license":
-        if args.set:
-            LicenseClient().set_license_key(args.set)
+    if cmd == "config":
+        p = argparse.ArgumentParser(prog="clide config")
+        p.add_argument("--set", metavar="KEY=VALUE")
+        p.add_argument("--get", metavar="KEY")
+        cmd_config(p.parse_args(cmd_args))
+    elif cmd == "memory":
+        p = argparse.ArgumentParser(prog="clide memory")
+        p.add_argument("--remember", metavar="KEY=VALUE")
+        p.add_argument("--recall", metavar="QUERY", nargs="?", const="")
+        cmd_memory(p.parse_args(cmd_args))
+    elif cmd == "license":
+        p = argparse.ArgumentParser(prog="clide license")
+        p.add_argument("--set", metavar="KEY")
+        parsed = p.parse_args(cmd_args)
+        if parsed.set:
+            LicenseClient().set_license_key(parsed.set)
             console.print(f"[green]License key saved[/green]")
         else:
-            cmd_license(args)
-    elif args.command == "login":
-        cmd_login(args)
-    elif args.command == "signup":
-        cmd_signup(args)
-    elif args.command == "providers":
-        cmd_providers(args)
+            cmd_license(parsed)
+    elif cmd == "login":
+        p = argparse.ArgumentParser(prog="clide login")
+        p.add_argument("--email")
+        p.add_argument("--password")
+        cmd_login(p.parse_args(cmd_args))
+    elif cmd == "signup":
+        p = argparse.ArgumentParser(prog="clide signup")
+        p.add_argument("--email")
+        p.add_argument("--password")
+        cmd_signup(p.parse_args(cmd_args))
+    elif cmd == "providers":
+        cmd_providers(None)
     else:
-        cmd_interactive(args)
+        cmd_interactive(args, " ".join(unknown))
+
+
+if __name__ == "__main__":
+    main()
