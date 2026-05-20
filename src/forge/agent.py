@@ -19,21 +19,26 @@ license = LicenseClient()
 
 SYSTEM_PROMPT = """You are CLIDE. You help users build software.
 
+You have persistent memory across sessions. Use [MEMORY: key=value] to remember things, [RECALL: query] to recall past memories.
+
 Tools: {tools}
+
+Memories from past sessions:
+{memories}
 
 Write files using ```filepath: path.ext blocks. Never edit CLIDE files. Be concise."""
 
 
 def build_prompt(instruction: str, context: dict = None) -> str:
+    try:
+        recent = memory.history(10)
+        mem_lines = [f"  - {m['key']}: {str(m['value'])[:80]}" for m in recent]
+        mem_text = "\n".join(mem_lines) if mem_lines else "  (none)"
+    except:
+        mem_text = "  (unavailable)"
+
     cfg = load_config()
     cwd = str(Path.cwd())
-
-    recent = memory.history(5)
-    mem_context = ""
-    if recent:
-        mem_context = "Recent memories:\n" + "\n".join(
-            f"  - {m['key']}: {m['value'][:100]}" for m in recent
-        )
 
     files = _get_file_list(cwd)
 
@@ -42,10 +47,9 @@ def build_prompt(instruction: str, context: dict = None) -> str:
         project_summary = f"Project summary: {context['summary']}"
 
     return (
-        f"{SYSTEM_PROMPT.format(tools=describe_tools())}\n\n"
+        f"{SYSTEM_PROMPT.format(tools=describe_tools(), memories=mem_text)}\n\n"
         f"Current directory: {cwd}\n"
-        f"{project_summary}\n"
-        f"{mem_context}\n\n"
+        f"{project_summary}\n\n"
         f"Files in project:\n{files}\n\n"
         f"User request: {instruction}"
     )
@@ -70,9 +74,25 @@ def parse_code_blocks(text: str):
     for match in re.finditer(pattern, text, re.DOTALL):
         path = match.group(1).strip()
         code = match.group(2).strip()
-        if re.match(r"^[\w./\\\-]+\.\w+$", path) and re.search(r"[a-zA-Z]", path):
+        if re.match(r"^[\w./\\-]+\.\w+$", path) and re.search(r"[a-zA-Z]", path):
             blocks.append((path, code))
     return blocks
+
+
+def process_memory_commands(text: str):
+    memories_stored = 0
+    for match in re.finditer(r"\[MEMORY:\s*([^=]+)=(.+?)\]", text, re.IGNORECASE):
+        key = match.group(1).strip()
+        value = match.group(2).strip()
+        memory.remember(key, value)
+        memories_stored += 1
+    for match in re.finditer(r"\[RECALL:\s*(.+?)\]", text, re.IGNORECASE):
+        query = match.group(1).strip()
+        results = memory.recall(query)
+        if results:
+            console.print(f"[dim]Memory recall ({query}): {len(results)} results[/dim]")
+    if memories_stored:
+        console.print(f"[dim]Stored {memories_stored} memory/ies[/dim]")
 
 
 def show_diff(old: str, new: str, path: str):
@@ -117,6 +137,9 @@ def run(instruction: str, auto: bool = False) -> dict:
     console.print(f"[dim]{provider}/{model or 'default'} working...[/dim]")
 
     response = chat(prompt, provider=provider, model=model or None)
+
+    # Process any memory commands in the response
+    process_memory_commands(response)
 
     console.print()
     console.print("=" * 70)
