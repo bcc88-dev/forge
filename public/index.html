@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLIDE - The AI coding agent that never forgets</title>
+    <title>CLIDE - AI agent that never forgets</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -12,16 +12,34 @@
             color: #e4e4e7;
             line-height: 1.6;
         }
-        .container { max-width: 800px; margin: 0 auto; padding: 2rem; }
+        .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
         header { text-align: center; padding: 4rem 0 2rem; }
         h1 { font-size: 3rem; font-weight: 800; background: linear-gradient(135deg, #22d3ee, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         h2 { font-size: 1.5rem; color: #a1a1aa; margin: 1rem 0 2rem; font-weight: 400; }
         .subtitle { font-size: 1.1rem; color: #71717a; margin-top: 0.5rem; }
-        .install-box {
+        .box {
             background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 1.5rem; margin: 2rem 0;
         }
-        .install-box pre { background: #09090b; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9rem; }
-        .install-box code { color: #22d3ee; }
+        .box pre { background: #09090b; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9rem; }
+        .box code { color: #22d3ee; }
+        .terminal-box {
+            background: #000; border: 1px solid #22d3ee33; border-radius: 12px; padding: 0; margin: 2rem 0; overflow: hidden;
+        }
+        .terminal-header {
+            background: #18181b; padding: 0.5rem 1rem; border-bottom: 1px solid #27272a;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .terminal-dot.red { background: #ef4444; }
+        .terminal-dot.yellow { background: #eab308; }
+        .terminal-dot.green { background: #22c55e; }
+        .terminal-body {
+            padding: 1rem; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.85rem; min-height: 200px;
+        }
+        .terminal-body .prompt { color: #22d3ee; }
+        .terminal-body .output { color: #a1a1aa; }
+        .terminal-body .cursor { animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
         .btn {
             display: inline-block; padding: 0.75rem 2rem; border-radius: 8px;
             font-weight: 600; text-decoration: none; margin: 0.5rem;
@@ -31,13 +49,15 @@
         .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(34, 211, 238, 0.3); }
         .btn-outline { border: 1px solid #27272a; color: #e4e4e7; }
         .btn-outline:hover { border-color: #22d3ee; }
-        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin: 3rem 0; }
+        .btn-github { background: #24292e; color: #fff; border: 1px solid #404448; }
+        .btn-github:hover { background: #2c3136; }
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 3rem 0; }
         .feature { background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 1.5rem; }
         .feature h3 { color: #22d3ee; margin-bottom: 0.5rem; }
         .feature p { color: #71717a; font-size: 0.9rem; }
         .pricing { text-align: center; padding: 3rem 0; }
         .pricing h2 { margin-bottom: 1rem; }
-        .price-card { display: inline-block; background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 2rem; margin: 1rem; min-width: 250px; }
+        .price-card { display: inline-block; background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 2rem; margin: 1rem; min-width: 260px; vertical-align: top; }
         .price-card h3 { font-size: 1.2rem; }
         .price { font-size: 2.5rem; font-weight: 800; margin: 0.5rem 0; }
         .price span { font-size: 1rem; color: #71717a; font-weight: 400; }
@@ -45,8 +65,13 @@
         .price-card li { padding: 0.3rem 0; color: #a1a1aa; }
         .price-card li::before { content: "> "; color: #22d3ee; }
         .price-card.featured { border-color: #22d3ee; }
+        .price-card .badge { display: inline-block; background: #22d3ee22; color: #22d3ee; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; margin-bottom: 0.5rem; }
         footer { text-align: center; padding: 2rem; color: #52525b; font-size: 0.8rem; }
         .cta-buttons { text-align: center; margin: 2rem 0; }
+        .ssh-demo { margin: 1rem 0; }
+        .ssh-demo code { background: #09090b; padding: 0.2rem 0.5rem; border-radius: 4px; color: #22d3ee; }
+        .section-title { font-size: 1.8rem; text-align: center; margin: 3rem 0 1rem; }
+        .github-auth { text-align: center; margin: 1rem 0; }
     </style>
 </head>
 <body>
@@ -54,43 +79,83 @@
         <header>
             <h1>CLIDE</h1>
             <p class="subtitle">The AI coding agent that <em>never forgets</em></p>
-            <h2>Every session, every preference, every decision — remembered forever</h2>
+            <h2>SSH in. Start building. It remembers everything.</h2>
         </header>
 
         <div class="cta-buttons">
-            <a href="#install" class="btn btn-primary">Install Now</a>
-            <a href="#pricing" class="btn btn-outline">View Pricing</a>
+            <a href="#terminal" class="btn btn-primary">Try Web Terminal</a>
+            <a href="#ssh" class="btn btn-outline">SSH Access</a>
+            <a href="#pricing" class="btn btn-outline">Pricing</a>
+        </div>
+
+        <div class="terminal-box" id="terminal">
+            <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span style="color: #52525b; font-size: 0.75rem; margin-left: 0.5rem;">clide@agent — Web Terminal</span>
+            </div>
+            <div class="terminal-body" id="xterm-container">
+                <div><span class="prompt">clide@agent:~$</span> <span class="output">ssh ai@clide.ai</span></div>
+                <div><span class="output">Authenticating via GitHub...</span></div>
+                <div><span class="output" style="color: #22c55e;">> Welcome back, user! I remember your last session.</span></div>
+                <div><span class="prompt">clide@agent:~$</span> <span class="output">build my react app</span></div>
+                <div><span class="output" style="color: #22d3ee;">> I remember you were working on a dashboard.</span></div>
+                <div><span class="output" style="color: #22d3ee;">> Let's pick up where we left off...</span></div>
+                <div><span class="prompt">clide@agent:~$</span><span class="cursor"> ▊</span></div>
+            </div>
         </div>
 
         <div class="features">
             <div class="feature">
+                <h3>Zero Install</h3>
+                <p>Open a browser or type <code style="color:#22d3ee">ssh ai@clide.ai</code>. No pip, no setup, no config.</p>
+            </div>
+            <div class="feature">
                 <h3>Persistent Memory</h3>
-                <p>Cross-session, cross-project memory. The only agent that remembers everything you've told it.</p>
+                <p>Every session remembers the last. Your preferences, your project, your decisions — forever.</p>
+            </div>
+            <div class="feature">
+                <h3>GitHub Auth</h3>
+                <p>Sign in with GitHub via Supabase. No passwords to remember. Your license key is your SSH key.</p>
             </div>
             <div class="feature">
                 <h3>Multi-Model</h3>
-                <p>Works with Groq, OpenAI, Ollama, OpenRouter, and any OpenAI-compatible API. You choose.</p>
+                <p>Runs on Groq, OpenAI, Ollama, OpenRouter. You choose. The agent doesn't care.</p>
             </div>
             <div class="feature">
-                <h3>Any Platform</h3>
-                <p>macOS, Linux, Windows. One install command. Works in any terminal.</p>
-            </div>
-            <div class="feature">
-                <h3>Code Generation</h3>
-                <p>Read, write, edit, refactor. Smart file-aware code generation with diff preview.</p>
+                <h3>Multi-Terminal</h3>
+                <p>Same agent session across browser and terminal. Start in one, continue in the other.</p>
             </div>
             <div class="feature">
                 <h3>Your Data</h3>
-                <p>API keys stay on your machine. Memory is yours in your Supabase. No vendor lock-in.</p>
-            </div>
-            <div class="feature">
-                <h3>Sub-Agent System</h3>
-                <p>Spawn parallel agents for research, exploration, and complex multi-step tasks.</p>
+                <p>Memory stored in your Supabase. API keys encrypted. No vendor lock-in. MIT licensed.</p>
             </div>
         </div>
 
-        <div id="install" class="install-box">
-            <h3>Install in one line</h3>
+        <div class="box" id="ssh">
+            <h3>SSH Access</h3>
+            <p style="color: #a1a1aa; margin-bottom: 1rem;">No install required. Just SSH in from any terminal.</p>
+            <div class="ssh-demo">
+                <pre><code># Authenticate with your license key
+$ ssh ai@clide.ai
+password: [your license key]
+
+> Welcome! I remember you from last session.
+> You were working on the payment API. Let's continue.
+clide> help me finish the Stripe integration
+
+# Or use the web terminal at clide.ai</code></pre>
+            </div>
+            <div class="github-auth">
+                <a href="#" class="btn btn-github" onclick="alert('GitHub OAuth coming soon! Sign up via Supabase.')">Sign in with GitHub</a>
+                <a href="#pricing" class="btn btn-outline">Get License Key</a>
+            </div>
+        </div>
+
+        <div class="box" id="install">
+            <h3>Install CLI (optional)</h3>
+            <p style="color: #a1a1aa; margin-bottom: 1rem;">For local-only use. No cloud account needed.</p>
             <pre><code>pip install clide-cli</code></pre>
             <p style="color: #71717a; margin-top: 0.5rem;">Requires Python 3.10+</p>
         </div>
@@ -98,23 +163,26 @@
         <div id="pricing" class="pricing">
             <h2>Simple Pricing</h2>
             <div class="price-card">
-                <h3>Free Trial</h3>
-                <div class="price">$0<span>/7 days</span></div>
+                <h3>Local CLI</h3>
+                <div class="price">$0<span>/forever</span></div>
                 <ul>
-                    <li>Full feature access</li>
+                    <li>Full CLI agent</li>
                     <li>Ollama + Groq support</li>
-                    <li>Local memory</li>
+                    <li>Local SQLite memory</li>
+                    <li>MIT License</li>
                 </ul>
-                <a href="#" class="btn btn-outline" style="display:block; margin-top: 1rem;">Install</a>
+                <a href="#install" class="btn btn-outline" style="display:block; margin-top: 1rem;">Install</a>
             </div>
             <div class="price-card featured">
-                <h3>Individual</h3>
+                <div class="badge">POPULAR</div>
+                <h3>Cloud Agent</h3>
                 <div class="price">$15<span>/month</span></div>
                 <ul>
+                    <li>SSH access: <code style="color:#22d3ee">ssh ai@clide.ai</code></li>
+                    <li>Web terminal at clide.ai</li>
                     <li>Persistent Supabase memory</li>
+                    <li>Multi-terminal sessions</li>
                     <li>All API providers</li>
-                    <li>Cross-session recall</li>
-                    <li>Priority support</li>
                 </ul>
                 <a href="#" class="btn btn-primary" style="display:block; margin-top: 1rem;">Subscribe</a>
             </div>
@@ -123,16 +191,17 @@
                 <div class="price">$30<span>/month</span></div>
                 <ul>
                     <li>Team memory sharing</li>
+                    <li>Dedicated agent instance</li>
                     <li>Audit logging</li>
-                    <li>Dedicated support</li>
                     <li>Custom integrations</li>
+                    <li>Priority support</li>
                 </ul>
                 <a href="#" class="btn btn-outline" style="display:block; margin-top: 1rem;">Contact</a>
             </div>
         </div>
 
         <footer>
-            CLIDE &mdash; Built with Python and ❤️ &mdash; MIT License
+            CLIDE &mdash; Built with Python and ❤️ &mdash; MIT License &mdash; <a href="https://github.com/bcc88-dev/forge" style="color: #52525b;">GitHub</a>
         </footer>
     </div>
 </body>
