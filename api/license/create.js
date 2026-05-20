@@ -1,11 +1,9 @@
-// POST /api/license/create - Generates a license key after Stripe payment
-// Vercel serverless function
-
 const crypto = require('crypto');
-const { Stripe } = require('stripe');
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 module.exports = async (req, res) => {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -18,31 +16,53 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'email and stripe_session_id required' });
     }
 
-    // Verify Stripe session
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return res.status(500).json({ error: 'Stripe not configured' });
+    let stripe = null;
+    let tier = 'individual';
+    if (process.env.STRIPE_SECRET_KEY) {
+      const { Stripe } = require('stripe');
+      stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+      const session = await stripe.checkout.sessions.retrieve(stripe_session_id);
+      if (session.payment_status !== 'paid') {
+        return res.status(402).json({ error: 'Payment not completed' });
+      }
+      tier = session.metadata?.tier || 'individual';
     }
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const session = await stripe.checkout.sessions.retrieve(stripe_session_id);
 
-    if (session.payment_status !== 'paid') {
-      return res.status(402).json({ error: 'Payment not completed' });
-    }
-
-    // Generate license key
     const license_key = 'fg_' + crypto.randomBytes(24).toString('hex');
+    const expires_at = new Date(Date.now() + 30 * 86400000).toISOString();
 
-    // In production: store in Supabase or KV store
-    const result = {
+    let stored = false;
+    if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+      const body = JSON.stringify({
+        license_key,
+        tier,
+        status: 'active',
+        expires_at,
+        stripe_subscription_id: stripe ? stripe_session_id : null,
+        stripe_customer_id: stripe ? (await stripe.checkout.sessions.retrieve(stripe_session_id)).customer : null,
+      });
+      const resp = await fetch(`${SUPABASE_URL}/rest/v1/forge_licenses`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_SERVICE_KEY,
+          'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+          'Prefer': 'return=minimal',
+        },
+        body,
+      });
+      stored = resp.ok;
+    }
+
+    return res.status(200).json({
       key: license_key,
       email,
-      tier: session.metadata?.tier || 'individual',
-      expires_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+      tier,
+      expires_at,
       created_at: new Date().toISOString(),
-      valid: true
-    };
-
-    return res.status(200).json(result);
+      valid: true,
+      stored,
+    });
   } catch (err) {
     console.error('License create error:', err);
     return res.status(500).json({ error: err.message });
