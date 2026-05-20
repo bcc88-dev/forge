@@ -4,55 +4,84 @@ import re
 import difflib
 from pathlib import Path
 from rich.console import Console
-from rich.panel import Panel
 from rich.markdown import Markdown
 
-from .config import load_config, save_config
-from .api_client import chat, check_provider
+from .config import load_config
+from .api_client import chat
 from .memory import Memory
-from .tools import TOOLS, describe_tools
-from .license import LicenseClient
+from .tools import describe_tools
 
 console = Console()
 memory = Memory()
-license = LicenseClient()
 
-SYSTEM_PROMPT = """You are CLIDE. You help users build software.
+SYSTEM_PROMPT = """You are CLIDE — a coding agent with persistent memory across sessions.
 
-You have persistent memory across sessions. Use [MEMORY: key=value] to remember things, [RECALL: query] to recall past memories.
+## Memory
+You have a permanent memory that persists between conversations. Be proactive:
+- When the user tells you something about themselves, their project, or preferences, store it automatically: [MEMORY: key=value]
+- Before answering a question, check if you already know the answer: [RECALL: topic]
+- Reference what you remember from past sessions to provide better context
 
-Tools: {tools}
+## Tools
+{tools}
 
-Memories from past sessions:
-{memories}
+## Relevant memories
+Found matching your request:
+{relevant}
 
-Write files using ```filepath: path.ext blocks. Never edit CLIDE files. Be concise."""
+## Recent memories (from all sessions)
+{recent}
+
+## Rules
+- Write files using ```filepath: path.ext blocks
+- Never edit CLIDE/forge files
+- Be concise
+- When you make a memory or recall, do it inline in your response, then answer"""
 
 
-def build_prompt(instruction: str, context: dict = None) -> str:
-    try:
-        recent = memory.history(10)
-        mem_lines = [f"  - {m['key']}: {str(m['value'])[:80]}" for m in recent]
-        mem_text = "\n".join(mem_lines) if mem_lines else "  (none)"
-    except:
-        mem_text = "  (unavailable)"
-
-    cfg = load_config()
+def build_prompt(instruction: str) -> str:
     cwd = str(Path.cwd())
+    cfg = load_config()
 
+    relevant_text = _search_memory(instruction)
+    recent_text = _recent_memory()
     files = _get_file_list(cwd)
 
-    project_summary = ""
-    if context and context.get("summary"):
-        project_summary = f"Project summary: {context['summary']}"
-
     return (
-        f"{SYSTEM_PROMPT.format(tools=describe_tools(), memories=mem_text)}\n\n"
+        f"{SYSTEM_PROMPT.format(tools=describe_tools(), relevant=relevant_text, recent=recent_text)}\n\n"
         f"Current directory: {cwd}\n"
-        f"{project_summary}\n\n"
         f"Files in project:\n{files}\n\n"
         f"User request: {instruction}"
     )
+
+
+def _search_memory(instruction: str) -> str:
+    words = re.findall(r"[A-Za-z][A-Za-z0-9_-]{2,}", instruction)
+    stopwords = {"the","and","for","are","you","your","with","that","this","what","how","why","when","where","can","do","does","is","it","my","me","to","of","in","on","at","by","be","or","an","a","not","no","but","from","they","them","their","have","has","had","will","would","could","should","may","might","shall","must","need","dare","ought","used"}
+    keywords = [w.lower() for w in words if w.lower() not in stopwords]
+    seen = set()
+    found = []
+    for w in keywords:
+        if w in seen:
+            continue
+        seen.add(w)
+        results = memory.recall(w, limit=3)
+        for r in results:
+            key = r["key"]
+            if key not in {f["key"] for f in found}:
+                found.append({"key": key, "value": str(r["value"])[:100]})
+    if not found:
+        return "  (none)"
+    return "\n".join(f"  - {f['key']}: {f['value']}" for f in found[:10])
+
+
+def _recent_memory() -> str:
+    try:
+        recent = memory.history(10)
+        lines = [f"  - {m['key']}: {str(m['value'])[:80]}" for m in recent]
+        return "\n".join(lines) if lines else "  (none)"
+    except:
+        return "  (unavailable)"
 
 
 def _get_file_list(cwd: str, max_files: int = 50) -> str:
@@ -129,7 +158,7 @@ def run(instruction: str, auto: bool = False) -> dict:
 
     memory.remember("last_instruction", instruction[:200], str(Path.cwd()))
 
-    prompt = build_prompt(instruction, {"summary": instruction[:250]})
+    prompt = build_prompt(instruction)
 
     provider = cfg.get("provider", "ollama")
     model = cfg.get("model", "") or cfg.get("ollama_model", "")
@@ -138,7 +167,6 @@ def run(instruction: str, auto: bool = False) -> dict:
 
     response = chat(prompt, provider=provider, model=model or None)
 
-    # Process any memory commands in the response
     process_memory_commands(response)
 
     console.print()

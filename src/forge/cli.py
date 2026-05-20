@@ -18,12 +18,20 @@ console = Console()
 
 
 def cmd_interactive(args, instruction_text=""):
-    instruction = instruction_text
-    if not instruction:
+    mem = Memory()
+    sup_mode = mem.supabase_mode
+    if "offline" in sup_mode:
         console.print(Panel.fit(
-            "[bold green]CLIDE[/bold green] - The AI coding agent that never forgets",
+            "[bold green]CLIDE[/bold green] - local only (no Supabase)",
             border_style="green"
         ))
+    else:
+        console.print(Panel.fit(
+            f"[bold green]CLIDE[/bold green] - memory synced via Supabase ({sup_mode})",
+            border_style="green"
+        ))
+    instruction = instruction_text
+    if not instruction:
         instruction = console.input("\n[bold]What should I do?[/bold]\n> ")
 
     run(instruction, auto=args.auto)
@@ -44,12 +52,13 @@ def cmd_config(args):
         console.print("[bold]CLIDE Configuration:[/bold]")
         for k, v in cfg.items():
             if any(secret in k for secret in ["key", "secret", "token", "password"]):
-                v = str(v)[:8] + "..." if v is not None else "[not set]"
+                v = str(v)[:8] + "..." if v else "[not set]"
             console.print(f"  {k} = {v}")
 
 
 def cmd_memory(args):
     mem = Memory()
+    console.print(f"  Memory: local + Supabase {mem.supabase_mode}")
     if args.remember:
         parts = args.remember.split("=", 1)
         key = parts[0].strip()
@@ -121,6 +130,25 @@ def cmd_providers(args):
                 console.print(f"    - {m}")
 
 
+def cmd_status(args):
+    mem = Memory()
+    console.print("[bold]CLIDE Status[/bold]")
+    console.print(f"  Version: {__version__}")
+    console.print(f"  Memory: local + Supabase {mem.supabase_mode}")
+    lic = LicenseClient()
+    lic_status = lic.validate()
+    if lic_status.get("valid"):
+        console.print(f"  License: [green]active[/green] ({lic_status.get('source', 'unknown')})")
+    else:
+        console.print(f"  License: [yellow]trial[/yellow]")
+    for provider in ["ollama", "groq"]:
+        available, models = check_provider(provider)
+        if available:
+            console.print(f"  {provider}: [green]ok[/green]")
+        else:
+            console.print(f"  {provider}: [red]unavailable[/red]")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="CLIDE - The AI coding agent that never forgets",
@@ -169,6 +197,8 @@ def main():
         cmd_signup(p.parse_args(cmd_args))
     elif cmd == "providers":
         cmd_providers(None)
+    elif cmd == "status":
+        cmd_status(None)
     else:
         cmd_interactive(args, " ".join(unknown))
 
